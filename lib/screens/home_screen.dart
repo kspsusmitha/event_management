@@ -6,7 +6,8 @@ import 'decoration_screen.dart';
 import 'manage_profile_screen.dart';
 import 'manage_bookings_screen.dart';
 import 'reset_password_screen.dart';
-import '../utils/theme.dart';
+
+import 'login_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -33,22 +34,110 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: AppTheme.darkCard,
-        elevation: 0,
-        title: const Text(
-          'Red Carpet',
-          style: TextStyle(color: AppTheme.textPrimary),
+    return Container(
+      decoration: const BoxDecoration(
+        image: DecorationImage(
+          image: NetworkImage("https://images.pexels.com/photos/1190298/pexels-photo-1190298.jpeg?cs=srgb&dl=pexels-wendywei-1190298.jpg&fm=jpg"),
+          fit: BoxFit.cover,
         ),
-        iconTheme: const IconThemeData(color: AppTheme.textPrimary),
       ),
-      drawer: Drawer(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          title: const Text(
+            'Red Carpet',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          iconTheme: const IconThemeData(color: Colors.white),
+        ),
+        drawer: _buildDrawer(),
+        body: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Colors.black.withOpacity(0.6),
+                Colors.black.withOpacity(0.8),
+              ],
+            ),
+          ),
+          child: _screens[_selectedIndex],
+        ),
+        bottomNavigationBar: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                const Color(0xFF8A2BE2).withOpacity(0.9),
+                const Color(0xFF4A148C).withOpacity(0.9),
+              ],
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.2),
+                blurRadius: 10,
+                offset: const Offset(0, -5),
+              ),
+            ],
+          ),
+          child: BottomNavigationBar(
+            items: const <BottomNavigationBarItem>[
+              BottomNavigationBarItem(
+                icon: Icon(Icons.location_city),
+                label: 'Venues',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.camera_alt),
+                label: 'Photography',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.restaurant_menu),
+                label: 'Catering',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.celebration),
+                label: 'Decoration',
+              ),
+            ],
+            currentIndex: _selectedIndex,
+            selectedItemColor: Colors.white,
+            unselectedItemColor: Colors.white70,
+            backgroundColor: Colors.transparent,
+            type: BottomNavigationBarType.fixed,
+            elevation: 0,
+            onTap: _onItemTapped,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDrawer() {
+    return Drawer(
+      child: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF8A2BE2),
+              Color(0xFF4A148C),
+            ],
+          ),
+        ),
         child: Column(
           children: [
             UserAccountsDrawerHeader(
-              decoration: const BoxDecoration(
-                color: AppTheme.primaryColor,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.1),
               ),
               currentAccountPicture: const CircleAvatar(
                 backgroundColor: Colors.white,
@@ -59,7 +148,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
-                  color: AppTheme.textPrimary,
+                  color: Colors.white,
                 ),
               ),
               accountEmail: null,
@@ -122,7 +211,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     icon: Icons.logout,
                     title: 'Logout',
                     onTap: () {
-                      // Handle logout
+                      _logout();
                     },
                   ),
                 ],
@@ -133,49 +222,12 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Text(
                 'App Version: 01.000.01',
                 style: TextStyle(
-                  color: AppTheme.textSecondary,
+                  color: Colors.white.withOpacity(0.7),
                   fontSize: 12,
                 ),
               ),
             ),
           ],
-        ),
-      ),
-      body: _screens[_selectedIndex],
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 10,
-              offset: const Offset(0, -5),
-            ),
-          ],
-        ),
-        child: BottomNavigationBar(
-          items: const <BottomNavigationBarItem>[
-            BottomNavigationBarItem(
-              icon: Icon(Icons.location_city),
-              label: 'Venues',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.camera_alt),
-              label: 'Photography',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.restaurant_menu),
-              label: 'Catering',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.celebration),
-              label: 'Decoration',
-            ),
-          ],
-          currentIndex: _selectedIndex,
-          selectedItemColor: AppTheme.accentColor,
-          unselectedItemColor: AppTheme.textSecondary,
-          onTap: _onItemTapped,
-          type: BottomNavigationBarType.fixed,
         ),
       ),
     );
@@ -189,23 +241,51 @@ class _HomeScreenState extends State<HomeScreen> {
     return ListTile(
       leading: Icon(
         icon,
-        color: AppTheme.textSecondary,
+        color: Colors.white70,
         size: 24,
       ),
       title: Text(
         title,
-        style: TextStyle(
+        style: const TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.w500,
-          color: AppTheme.textPrimary,
+          color: Colors.white,
         ),
       ),
-      trailing: Icon(
+      trailing: const Icon(
         Icons.arrow_forward_ios,
         size: 16,
-        color: AppTheme.textSecondary,
+        color: Colors.white70,
       ),
       onTap: onTap,
+    );
+  }
+
+  Future<void> _logout() async {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Logout'),
+        content: const Text('Are you sure you want to logout?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              //await SessionManager.clearSession();
+              if (!mounted) return;
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (context) => const LoginScreen()),
+                (route) => false,
+              );
+            },
+            child: const Text('Logout'),
+          ),
+        ],
+      ),
     );
   }
 } 

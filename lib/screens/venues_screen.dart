@@ -103,17 +103,18 @@ class _VenuesScreenState extends State<VenuesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Venues',
-        style: TextStyle(
-          color: Colors.white
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            const Color.fromARGB(255, 72, 20, 72).withOpacity(0.9),  // Purple
+            const Color(0xFF4A148C).withOpacity(0.9),  // Darker purple
+          ],
         ),
-        ),
-        iconTheme: const IconThemeData(color: Colors.white),
-        backgroundColor: AppTheme.primaryColor,
       ),
-      body: ListView(
+      child: ListView(
         children: [
           const SizedBox(height: 20),
           CarouselSlider(
@@ -121,52 +122,71 @@ class _VenuesScreenState extends State<VenuesScreen> {
               return Container(
                 margin: const EdgeInsets.all(6.0),
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8.0),
+                  borderRadius: BorderRadius.circular(16.0),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
-                      spreadRadius: 1,
-                      blurRadius: 5,
-                      offset: const Offset(0, 3),
+                      color: Colors.black.withOpacity(0.3),
+                      blurRadius: 15,
+                      offset: const Offset(0, 5),
                     ),
                   ],
                 ),
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8.0),
+                  borderRadius: BorderRadius.circular(16.0),
                   child: Stack(
                     children: [
                       Image.asset(
                         venue['image']!,
-                        fit: BoxFit.cover,
                         width: double.infinity,
+                        height: double.infinity,
+                        fit: BoxFit.cover,
+                      ),
+                      Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.transparent,
+                              Colors.black.withOpacity(0.7),
+                            ],
+                          ),
+                        ),
                       ),
                       Positioned(
-                        bottom: 0,
-                        left: 0,
-                        right: 0,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.bottomCenter,
-                              end: Alignment.topCenter,
-                              colors: [
-                                Colors.black.withOpacity(0.8),
-                                Colors.transparent,
+                        bottom: 20,
+                        left: 20,
+                        right: 20,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              venue['name']!,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.location_on,
+                                  color: Colors.white70,
+                                  size: 16,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  venue['location']!,
+                                  style: const TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 14,
+                                  ),
+                                ),
                               ],
                             ),
-                          ),
-                          padding: const EdgeInsets.symmetric(
-                            vertical: 10,
-                            horizontal: 16,
-                          ),
-                          child: Text(
-                            venue['name']!,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                          ],
                         ),
                       ),
                     ],
@@ -175,14 +195,15 @@ class _VenuesScreenState extends State<VenuesScreen> {
               );
             }).toList(),
             options: CarouselOptions(
-              height: 300.0,
-              enlargeCenterPage: true,
-              autoPlay: true,
-              aspectRatio: 16 / 9,
-              autoPlayCurve: Curves.fastOutSlowIn,
-              enableInfiniteScroll: true,
-              autoPlayAnimationDuration: const Duration(milliseconds: 800),
+              height: 300,
+              aspectRatio: 16/9,
               viewportFraction: 0.8,
+              enableInfiniteScroll: true,
+              autoPlay: true,
+              autoPlayInterval: const Duration(seconds: 3),
+              autoPlayAnimationDuration: const Duration(milliseconds: 800),
+              autoPlayCurve: Curves.fastOutSlowIn,
+              enlargeCenterPage: true,
               onPageChanged: (index, reason) {
                 setState(() {
                   _current = index;
@@ -191,35 +212,6 @@ class _VenuesScreenState extends State<VenuesScreen> {
             ),
           ),
           const SizedBox(height: 20),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: venues2.asMap().entries.map((entry) {
-              return Container(
-                width: 12.0,
-                height: 12.0,
-                margin: const EdgeInsets.symmetric(horizontal: 4.0),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: const Color(0xFF8A2BE2).withOpacity(
-                    _current == entry.key ? 0.9 : 0.4,
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-          const SizedBox(height: 30),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Text(
-              'Available Venues',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
           ListView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
@@ -232,21 +224,24 @@ class _VenuesScreenState extends State<VenuesScreen> {
                   vertical: 8,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(0.1),
-                      spreadRadius: 1,
-                      blurRadius: 4,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Colors.white.withOpacity(0.1),
+                      Colors.white.withOpacity(0.05),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.2),
+                    width: 1,
+                  ),
                 ),
                 child: ListTile(
                   contentPadding: const EdgeInsets.all(16),
                   leading: ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(12),
                     child: Image.asset(
                       venue['image1']!,
                       width: 80,
@@ -257,6 +252,7 @@ class _VenuesScreenState extends State<VenuesScreen> {
                   title: Text(
                     venue['name']!,
                     style: const TextStyle(
+                      color: Colors.white,
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
                     ),
@@ -264,50 +260,41 @@ class _VenuesScreenState extends State<VenuesScreen> {
                   subtitle: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 8),
                       Row(
                         children: [
                           const Icon(
                             Icons.location_on,
                             size: 16,
-                            color: Colors.grey,
+                            color: Colors.white70,
                           ),
                           const SizedBox(width: 4),
                           Expanded(
                             child: Text(
                               venue['location']!,
                               style: const TextStyle(
-                                color: Colors.grey,
+                                color: Colors.white70,
                                 fontSize: 14,
                               ),
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 8),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Row(
-                            children: [
-                              const Icon(
-                                Icons.attach_money,
-                                size: 16,
-                                color: Color(0xFF8A2BE2),
-                              ),
-                              Text(
-                                venue['price']!,
-                                style: const TextStyle(
-                                  color: Color(0xFF8A2BE2),
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
+                          Text(
+                            venue['price']!,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                           Text(
                             venue['capacity']!,
                             style: const TextStyle(
-                              color: Colors.grey,
+                              color: Colors.white70,
                               fontSize: 12,
                             ),
                           ),
@@ -315,29 +302,34 @@ class _VenuesScreenState extends State<VenuesScreen> {
                       ),
                     ],
                   ),
-                  trailing: IconButton(
-                    icon: const Icon(
-                      Icons.arrow_forward_ios,
-                      size: 16,
-                      color: Colors.grey,
+                  trailing: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => ServiceDetailScreen(
-                            serviceData: venue,
-                            type: 'venue',
+                    child: IconButton(
+                      icon: const Icon(
+                        Icons.arrow_forward_ios,
+                        size: 16,
+                        color: Colors.white,
+                      ),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ServiceDetailScreen(
+                              serviceData: venue,
+                              type: 'venue',
+                            ),
                           ),
-                        ),
-                      );
-                    },
+                        );
+                      },
+                    ),
                   ),
                 ),
               );
             },
           ),
-          const SizedBox(height: 20),
         ],
       ),
     );

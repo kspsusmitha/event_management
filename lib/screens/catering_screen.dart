@@ -99,17 +99,18 @@ class _CateringScreenState extends State<CateringScreen> {
   ];
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Catering',
-          style: TextStyle(
-          color: Colors.white
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            const Color.fromARGB(255, 72, 20, 72).withOpacity(0.9),  // Purple
+            const Color(0xFF4A148C).withOpacity(0.9),  // Darker purple
+          ],
         ),
-        ),
-        iconTheme: const IconThemeData(color: Colors.white),
-        backgroundColor: AppTheme.primaryColor,
       ),
-      body: ListView(
+      child: ListView(
         children: [
           const SizedBox(height: 20),
           CarouselSlider(
@@ -117,13 +118,12 @@ class _CateringScreenState extends State<CateringScreen> {
               return Container(
                 margin: const EdgeInsets.all(6.0),
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8.0),
+                  borderRadius: BorderRadius.circular(16.0),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
-                      spreadRadius: 1,
-                      blurRadius: 5,
-                      offset: const Offset(0, 3),
+                      color: Colors.black.withOpacity(0.3),
+                      blurRadius: 15,
+                      offset: const Offset(0, 5),
                     ),
                   ],
                 ),
@@ -227,16 +227,19 @@ class _CateringScreenState extends State<CateringScreen> {
                   vertical: 8,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(0.1),
-                      spreadRadius: 1,
-                      blurRadius: 4,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Colors.white.withOpacity(0.1),
+                      Colors.white.withOpacity(0.05),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.2),
+                    width: 1,
+                  ),
                 ),
                 child: ListTile(
                   contentPadding: const EdgeInsets.all(16),
@@ -251,6 +254,7 @@ class _CateringScreenState extends State<CateringScreen> {
                   title: Text(
                     caterer['name']!,
                     style: const TextStyle(
+                      color: Colors.white,
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
                     ),

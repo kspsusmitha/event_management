@@ -32,6 +32,14 @@ dependencies:
     sdk: flutter
   carousel_slider: ^5.0.0
   cupertino_icons: ^1.0.8
+  # Add these new packages for enhanced animations
+  animated_text_kit: ^4.2.2
+  lottie: ^3.1.0
+  shimmer: ^3.0.0
+  firebase_core: ^3.12.1
+  firebase_database: ^11.3.4
+  crypto: ^3.0.6
+  shared_preferences: ^2.2.2
   # Add any other dependencies you need
 
   # The following adds the Cupertino Icons font to your application.
