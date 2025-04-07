@@ -4,20 +4,20 @@ import 'package:flutter/services.dart';
 
 class AppTheme {
   // Main colors
-  static const Color primaryColor = Color(0xFF1E3D59);    // Deep Blue
-  static const Color accentColor = Color(0xFFFF9E2C);     // Gold
-  static const Color secondaryColor = Color(0xFF0F2B43);  // Darker Blue
+  static const Color primaryColor = Color(0xFF8A2BE2);    // Purple
+  static const Color accentColor = Color(0xFF4A148C);     // Dark Purple
+  static const Color secondaryColor = Color(0xFF6A1B9A);  // Medium Purple
   
   // Dark theme background colors
-  static const Color darkBackground = Color(0xFF0A1929);  // Very Dark Blue
-  static const Color darkSurface = Color(0xFF132F4C);     // Dark Blue Surface
-  static const Color darkCard = Color(0xFF173754);        // Card Background
+  static const Color darkBackground = Color(0xFF4A148C);  // Dark Purple
+  static const Color darkSurface = Color(0xFF6A1B9A);     // Medium Purple Surface
+  static const Color darkCard = Color(0xFF7B1FA2);        // Light Purple Card
   
   // Additional colors
   static const Color successColor = Color(0xFF66BB6A);    // Green
   static const Color errorColor = Color(0xFFFF5252);      // Red
   static const Color textPrimary = Color(0xFFFFFFFF);     // White
-  static const Color textSecondary = Color(0xFFB8C7D9);   // Light Blue Grey
+  static const Color textSecondary = Color(0xFFE1BEE7);   // Light Purple Grey
 
   static ThemeData darkTheme = ThemeData(
     brightness: Brightness.dark,

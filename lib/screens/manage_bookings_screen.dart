@@ -77,25 +77,25 @@ class _ManageBookingsScreenState extends State<ManageBookingsScreen> with Single
     return Scaffold(
       backgroundColor: const Color(0xFF8A2BE2).withOpacity(0.1),
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: const Color(0xFF8A2BE2).withOpacity(0.9),
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
           'My Bookings',
           style: TextStyle(
-            color: Colors.black,
+            color: Colors.white,
             fontSize: 20,
             fontWeight: FontWeight.w600,
           ),
         ),
         bottom: TabBar(
           controller: _tabController,
-          labelColor: const Color(0xFF8A2BE2),
-          unselectedLabelColor: Colors.grey,
-          indicatorColor: const Color(0xFF8A2BE2),
+          labelColor: Colors.white,
+          unselectedLabelColor: Colors.white70,
+          indicatorColor: Colors.white,
           tabs: const [
             Tab(text: 'Upcoming'),
             Tab(text: 'Past'),
