@@ -40,6 +40,7 @@ dependencies:
   firebase_database: ^11.3.4
   crypto: ^3.0.6
   shared_preferences: ^2.2.2
+  url_launcher: ^6.1.14
   # Add any other dependencies you need
 
   # The following adds the Cupertino Icons font to your application.

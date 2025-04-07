@@ -1,3 +1,4 @@
+import 'package:event_management/screens/terms_and_condition.dart';
 import 'package:flutter/material.dart';
 import 'venues_screen.dart';
 import 'photography_screen.dart';
@@ -6,6 +7,8 @@ import 'decoration_screen.dart';
 import 'manage_profile_screen.dart';
 import 'manage_bookings_screen.dart';
 import 'reset_password_screen.dart';
+
+import 'support_screen.dart';
 
 import 'login_screen.dart';
 
@@ -197,14 +200,24 @@ class _HomeScreenState extends State<HomeScreen> {
                     icon: Icons.description_outlined,
                     title: 'Terms & Conditions',
                     onTap: () {
-                      // Navigate to Terms & Conditions
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const TermsAndConditionsScreen(),
+                        ),
+                      );
                     },
                   ),
                   _buildDrawerItem(
                     icon: Icons.help_outline,
                     title: 'Support',
                     onTap: () {
-                      // Navigate to Support
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const SupportScreen(),
+                        ),
+                      );
                     },
                   ),
                   _buildDrawerItem(
@@ -288,4 +301,5 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-} 
+}
+

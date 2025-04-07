@@ -1,3 +1,4 @@
+import 'package:event_management/screens/terms_and_condition.dart';
 import 'package:flutter/material.dart';
 
 class ForgotPasswordSheet extends StatelessWidget {
@@ -125,9 +126,16 @@ class _ResetPasswordSheetState extends State<ResetPasswordSheet> {
   Widget build(BuildContext context) {
     return Container(
       padding: EdgeInsets.fromLTRB(24, 24, 24, MediaQuery.of(context).viewInsets.bottom + 24),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, -5),
+          ),
+        ],
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -231,6 +239,22 @@ class _ResetPasswordSheetState extends State<ResetPasswordSheet> {
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
                 ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          TextButton(
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (context) => const TermsAndConditionsScreen(),
+              );
+            },
+            child: const Text(
+              'By resetting password, you agree to our Terms & Conditions',
+              style: TextStyle(
+                color: Color(0xFF8A2BE2),
+                fontSize: 12,
               ),
             ),
           ),
