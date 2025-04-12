@@ -258,9 +258,10 @@ class _LoginScreenState extends State<LoginScreen> {
         );
 
         if (result['success']) {
-        //  await SessionManager.saveUserSession(result['user'] as UserModel);
-
           if (!mounted) return;
+          // final prefs = await SharedPreferences.getInstance();
+          // await prefs.setString('userId', result['fullName']);
+          // print(result['fullName']);
           Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(builder: (context) => const HomeScreen()),

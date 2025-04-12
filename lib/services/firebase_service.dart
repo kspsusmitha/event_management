@@ -2,6 +2,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:crypto/crypto.dart';
 import 'dart:convert';
 import '../models/user_model.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class FirebaseService {
   final DatabaseReference _database = FirebaseDatabase.instance.ref();
@@ -78,20 +79,20 @@ class FirebaseService {
       if (!snapshot.exists) {
         return {
           'success': false,
-          'message': 'User not found'
+          'message': 'User not found',
+          'fullName': 'fullName',
+          
         };
       }
 
       Map<dynamic, dynamic> users = snapshot.value as Map;
-      String hashedPassword = _hashPassword(password);
-      
       String? userId;
-      UserModel? user;
+      Map<String, dynamic>? userData;
 
       users.forEach((key, value) {
-        if (value['password'] == password) {
+        if (value['email'] == email && value['password'] == password) {
           userId = key;
-          user = UserModel.fromJson(key, value);
+          userData = Map<String, dynamic>.from(value);
         }
       });
 
@@ -102,9 +103,17 @@ class FirebaseService {
         };
       }
 
+      // Save user session
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('userId', userId!);
+      await prefs.setString('userEmail', email);
+      await prefs.setString('userName', userData!['fullName'] ?? '');
+      await prefs.setBool('isLoggedIn', true);
+
       return {
         'success': true,
-        'user': user,
+        'userId': userId,
+        'userData': userData,
         'message': 'Login successful'
       };
     } catch (e) {

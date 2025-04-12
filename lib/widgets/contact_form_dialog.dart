@@ -1,6 +1,9 @@
 import 'package:event_management/screens/booking_success_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:event_management/utils/order_id_generator.dart';
+import 'package:firebase_database/firebase_database.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:event_management/models/booking_model.dart';
 
 class ContactFormDialog extends StatefulWidget {
   final String serviceName;
@@ -21,6 +24,7 @@ class _ContactFormDialogState extends State<ContactFormDialog> {
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _guestsController = TextEditingController();
+  DateTime? _selectedDate;
 
   // Add email validation regex
   final RegExp _emailRegex = RegExp(
@@ -313,22 +317,163 @@ class _ContactFormDialogState extends State<ContactFormDialog> {
             return null;
           },
         ),
+        const SizedBox(height: 24),
+        InkWell(
+          onTap: () => _selectDate(context),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: _selectedDate == null 
+                    ? Colors.white.withOpacity(0.3)
+                    : Colors.white,
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  _selectedDate == null
+                      ? 'Select Event Date'
+                      : 'Date: ${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}',
+                  style: const TextStyle(color: Colors.white),
+                ),
+                const Icon(Icons.calendar_today, color: Colors.white),
+              ],
+            ),
+          ),
+        ),
       ],
     );
   }
 
-  void _submitForm() {
-    if (_formKey.currentState!.validate()) {
-      final orderId = OrderIdGenerator.generate();
-      
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => BookingSuccessScreen(
-            orderId: orderId,
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now().add(const Duration(days: 1)),
+      firstDate: DateTime.now().add(const Duration(days: 1)),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.dark(
+              primary: Color(0xFF8A2BE2),
+              surface: Color(0xFF4A148C),
+              onSurface: Colors.white,
+            ),
+            textButtonTheme: TextButtonThemeData(
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.white, // Button text color
+              ),
+            ),
+            dialogBackgroundColor: Color(0xFF4A148C), // Dialog background
           ),
-        ),
-      );
+          child: child!,
+        );
+      },
+      confirmText: "OK",
+      cancelText: "Cancel",
+    );
+    
+    if (picked != null && picked != _selectedDate) {
+      setState(() {
+        _selectedDate = picked;
+      });
+    }
+  }
+
+  void _submitForm() async {
+    if (_formKey.currentState!.validate()) {
+      if (_selectedDate == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please select an event date'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      try {
+        // Show loading indicator
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (BuildContext context) {
+            return const Center(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              ),
+            );
+          },
+        );
+
+        // Get current user ID from SharedPreferences
+        final prefs = await SharedPreferences.getInstance();
+        final userId = prefs.getString('userId'); // This should be saved during login
+
+        if (userId == null) {
+          Navigator.pop(context); // Remove loading indicator
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Please login to make a booking'),
+              backgroundColor: Colors.red,
+            ),
+          );
+          return;
+        }
+
+        final orderId = OrderIdGenerator.generate();
+
+        // Create booking object
+        final booking = BookingModel(
+          userId: userId, // Using logged-in user's ID
+          orderId: orderId,
+          serviceName: widget.serviceName,
+          name: _nameController.text,
+          phone: _phoneController.text,
+          email: _emailController.text,
+          guests: int.parse(_guestsController.text),
+          functionType: _selectedFunction,
+          eventDate: '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}',
+          status: 'Pending',
+          createdAt: DateTime.now().toIso8601String(),
+        );
+
+        // Save to Firebase Realtime Database under the logged-in user's node
+        final databaseRef = FirebaseDatabase.instance.ref();
+        await databaseRef
+            .child('users')  // Changed from 'bookings' to 'users'
+            .child(userId)   // User ID node
+            .child('bookings') // New bookings node under user
+            .child(orderId)  // Unique booking ID
+            .set(booking.toJson());
+
+        // Remove loading indicator
+        Navigator.pop(context);
+
+        // Navigate to success screen
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => BookingSuccessScreen(
+              orderId: orderId,
+            ),
+          ),
+        );
+      } catch (e) {
+        // Remove loading indicator
+        Navigator.pop(context);
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 } 

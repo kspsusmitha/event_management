@@ -1,7 +1,7 @@
 import 'package:event_management/screens/login_screen.dart';
 import 'package:flutter/material.dart';
 import '../services/firebase_service.dart';
-import '../screens/home_screen.dart';
+
 
 class RegistrationFormScreen extends StatefulWidget {
   const RegistrationFormScreen({Key? key}) : super(key: key);
@@ -57,7 +57,7 @@ class _RegistrationFormScreenState extends State<RegistrationFormScreen> {
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(
-                builder: (context) => const HomeScreen(),
+                builder: (context) => const  LoginScreen(),
               ),
             );
           }
