@@ -259,9 +259,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
         if (result['success']) {
           if (!mounted) return;
-          // final prefs = await SharedPreferences.getInstance();
-          // await prefs.setString('userId', result['fullName']);
-          // print(result['fullName']);
+          
+          // Debug print to verify data
+          print('Login successful: ${result['userData']}');
+          
           Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(builder: (context) => const HomeScreen()),

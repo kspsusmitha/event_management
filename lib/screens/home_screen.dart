@@ -11,6 +11,7 @@ import 'reset_password_screen.dart';
 import 'support_screen.dart';
 
 import 'login_screen.dart';
+import '../services/firebase_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -20,6 +21,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  final FirebaseService _firebaseService = FirebaseService();
   int _selectedIndex = 0;
   
   final List<Widget> _screens = [
@@ -138,23 +140,28 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         child: Column(
           children: [
-            UserAccountsDrawerHeader(
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.1),
-              ),
-              currentAccountPicture: const CircleAvatar(
-                backgroundColor: Colors.white,
-                backgroundImage: AssetImage('assets/images/profile.jpg'),
-              ),
-              accountName: const Text(
-                'Aayush Kriti',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                ),
-              ),
-              accountEmail: null,
+            FutureBuilder<String>(
+              future: _firebaseService.getUserName(),
+              builder: (context, snapshot) {
+                return UserAccountsDrawerHeader(
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.1),
+                  ),
+                  currentAccountPicture: const CircleAvatar(
+                    backgroundColor: Colors.white,
+                    backgroundImage: AssetImage('assets/images/profile.jpg'),
+                  ),
+                  accountName: Text(
+                    snapshot.data ?? 'Guest',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                  accountEmail: null,
+                );
+              },
             ),
             Expanded(
               child: ListView(
@@ -287,7 +294,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           TextButton(
             onPressed: () async {
-              //await SessionManager.clearSession();
+              await _firebaseService.logout();
               if (!mounted) return;
               Navigator.pushAndRemoveUntil(
                 context,

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:event_management/screens/booking_details_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../services/firebase_service.dart';
 
 class ManageBookingsScreen extends StatefulWidget {
   const ManageBookingsScreen({Key? key}) : super(key: key);
@@ -10,60 +12,69 @@ class ManageBookingsScreen extends StatefulWidget {
 
 class _ManageBookingsScreenState extends State<ManageBookingsScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
-
-  final List<Map<String, dynamic>> upcomingBookings = [
-    {
-      'name': 'Coolulu Kormangala turf park',
-      'location': 'Bangalore',
-      'image': 'assets/images/venue1.jpg',
-      'rating': 5,
-      'status': 'Confirmed',
-      'date': '25 March 2024',
-    },
-    {
-      'name': 'Electronic Steve-Music Festival',
-      'location': 'Bangalore',
-      'image': 'assets/images/venue2.jpg',
-      'rating': 5,
-      'status': 'Pending',
-      'date': '30 March 2024',
-    },
-  ];
-
-  final List<Map<String, dynamic>> pastBookings = [
-    {
-      'name': 'Shangri La',
-      'location': 'Bangalore',
-      'image': 'assets/images/venue3.jpg',
-      'rating': 5,
-      'status': 'Completed',
-      'date': '10 February 2024',
-    },
-    {
-      'name': 'Royal Palace',
-      'location': 'Bangalore',
-      'image': 'assets/images/venue4.jpg',
-      'rating': 4,
-      'status': 'Completed',
-      'date': '15 January 2024',
-    },
-  ];
-
-  final List<Map<String, dynamic>> cancelledBookings = [
-    {
-      'name': 'Grand Plaza',
-      'location': 'Bangalore',
-      'image': 'assets/images/venue5.jpg',
-      'rating': 0,
-      'status': 'Cancelled',
-      'date': '5 March 2024',
-    },
-  ];
+  final FirebaseService _firebaseService = FirebaseService();
+  bool _isLoading = true;
+  
+  List<Map<String, dynamic>> upcomingBookings = [];
+  List<Map<String, dynamic>> pastBookings = [];
+  List<Map<String, dynamic>> cancelledBookings = [];
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    _loadBookings();
+  }
+
+  Future<void> _loadBookings() async {
+    try {
+      setState(() {
+        _isLoading = true;
+      });
+
+      final prefs = await SharedPreferences.getInstance();
+      final userId = prefs.getString('userId');
+
+      if (userId == null) {
+        if (!mounted) return;
+        Navigator.pop(context);
+        return;
+      }
+
+      final result = await _firebaseService.getCategorizedBookings(userId);
+
+      if (result['success']) {
+        if (!mounted) return;
+        setState(() {
+          upcomingBookings = List<Map<String, dynamic>>.from(result['bookings']['upcoming']);
+          pastBookings = List<Map<String, dynamic>>.from(result['bookings']['past']);
+          cancelledBookings = List<Map<String, dynamic>>.from(result['bookings']['cancelled']);
+          _isLoading = false;
+        });
+      } else {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message']),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error loading bookings: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   @override
@@ -91,6 +102,13 @@ class _ManageBookingsScreenState extends State<ManageBookingsScreen> with Single
             fontWeight: FontWeight.w600,
           ),
         ),
+        actions: [
+          // Add refresh button
+          IconButton(
+            icon: const Icon(Icons.refresh, color: Colors.white),
+            onPressed: _loadBookings,
+          ),
+        ],
         bottom: TabBar(
           controller: _tabController,
           labelColor: Colors.white,
@@ -103,14 +121,20 @@ class _ManageBookingsScreenState extends State<ManageBookingsScreen> with Single
           ],
         ),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          _buildBookingsList(upcomingBookings),
-          _buildBookingsList(pastBookings),
-          _buildBookingsList(cancelledBookings),
-        ],
-      ),
+      body: _isLoading
+          ? const Center(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF8A2BE2)),
+              ),
+            )
+          : TabBarView(
+              controller: _tabController,
+              children: [
+                _buildBookingsList(upcomingBookings),
+                _buildBookingsList(pastBookings),
+                _buildBookingsList(cancelledBookings),
+              ],
+            ),
     );
   }
 
@@ -167,6 +191,9 @@ class _ManageBookingsScreenState extends State<ManageBookingsScreen> with Single
         statusColor = Colors.grey;
     }
 
+    // Default image if none provided
+    final defaultImage = 'assets/images/placeholder.jpg';
+
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       elevation: 2,
@@ -178,10 +205,19 @@ class _ManageBookingsScreenState extends State<ManageBookingsScreen> with Single
           ClipRRect(
             borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
             child: Image.asset(
-              booking['image'],
+              booking['image'] ?? defaultImage, // Use null-aware operator
               height: 150,
               width: double.infinity,
               fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                // Fallback widget if image fails to load
+                return Container(
+                  height: 150,
+                  width: double.infinity,
+                  color: Colors.grey[200],
+                  child: Icon(Icons.image_not_supported, size: 50, color: Colors.grey[400]),
+                );
+              },
             ),
           ),
           Padding(
@@ -194,7 +230,7 @@ class _ManageBookingsScreenState extends State<ManageBookingsScreen> with Single
                   children: [
                     Expanded(
                       child: Text(
-                        booking['name'],
+                        booking['serviceName'] ?? 'No Service Name', // Use null-aware operator
                         style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -211,7 +247,7 @@ class _ManageBookingsScreenState extends State<ManageBookingsScreen> with Single
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
-                        booking['status'],
+                        booking['status'] ?? 'Unknown', // Use null-aware operator
                         style: TextStyle(
                           color: statusColor,
                           fontSize: 12,
@@ -225,13 +261,13 @@ class _ManageBookingsScreenState extends State<ManageBookingsScreen> with Single
                 Row(
                   children: [
                     const Icon(
-                      Icons.location_on,
+                      Icons.person_outline,
                       size: 16,
                       color: Colors.grey,
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      booking['location'],
+                      booking['name'] ?? 'No Name', // Use null-aware operator
                       style: const TextStyle(
                         color: Colors.grey,
                         fontSize: 14,
@@ -249,7 +285,7 @@ class _ManageBookingsScreenState extends State<ManageBookingsScreen> with Single
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      booking['date'],
+                      booking['eventDate'] ?? 'No Date', // Use null-aware operator
                       style: const TextStyle(
                         color: Colors.grey,
                         fontSize: 14,
@@ -262,14 +298,21 @@ class _ManageBookingsScreenState extends State<ManageBookingsScreen> with Single
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Row(
-                      children: List.generate(
-                        5,
-                        (index) => Icon(
-                          index < booking['rating'] ? Icons.star : Icons.star_border,
+                      children: [
+                        const Icon(
+                          Icons.people_outline,
                           size: 16,
-                          color: index < booking['rating'] ? Colors.amber : Colors.grey[300],
+                          color: Colors.grey,
                         ),
-                      ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${booking['guests'] ?? 0} Guests', // Use null-aware operator
+                          style: const TextStyle(
+                            color: Colors.grey,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
                     ),
                     TextButton(
                       onPressed: () {

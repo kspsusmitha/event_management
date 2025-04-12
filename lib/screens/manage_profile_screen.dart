@@ -1,5 +1,7 @@
 import 'package:event_management/screens/terms_and_condition.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../services/firebase_service.dart';
 
 class ManageProfileScreen extends StatefulWidget {
   const ManageProfileScreen({Key? key}) : super(key: key);
@@ -9,20 +11,136 @@ class ManageProfileScreen extends StatefulWidget {
 }
 
 class _ManageProfileScreenState extends State<ManageProfileScreen> {
-  final TextEditingController _nameController = TextEditingController(text: 'Aayush Kriti');
-  final TextEditingController _dobController = TextEditingController(text: '03/03/2000');
-  final TextEditingController _emailController = TextEditingController(text: 'Aayush.kriti3@gmail.com');
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _dobController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final FirebaseService _firebaseService = FirebaseService();
+  bool _isLoading = true;
+  String? _userId;
 
   @override
-  void dispose() {
-    _nameController.dispose();
-    _dobController.dispose();
-    _emailController.dispose();
-    super.dispose();
+  void initState() {
+    super.initState();
+    _loadUserProfile();
+  }
+
+  Future<void> _loadUserProfile() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      _userId = prefs.getString('userId');
+
+      if (_userId == null) {
+        if (!mounted) return;
+        Navigator.pop(context);
+        return;
+      }
+
+      final result = await _firebaseService.getUserProfile(_userId!);
+
+      if (result['success']) {
+        final userData = result['userData'];
+        setState(() {
+          _nameController.text = userData['fullName'] ?? '';
+          _emailController.text = userData['email'] ?? '';
+          _dobController.text = userData['dob'] ?? '';
+          _isLoading = false;
+        });
+      } else {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message']),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error loading profile: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _saveChanges() async {
+    if (_userId == null) return;
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final updateData = {
+        'fullName': _nameController.text,
+        'dob': _dobController.text,
+        'updatedAt': DateTime.now().millisecondsSinceEpoch,
+      };
+
+      final result = await _firebaseService.updateUserProfile(_userId!, updateData);
+
+      if (!mounted) return;
+
+      if (result['success']) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Profile updated successfully'),
+            backgroundColor: Color(0xFF8A2BE2),
+          ),
+        );
+        Navigator.pop(context);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message']),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error updating profile: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return Scaffold(
+        body: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                const Color.fromARGB(255, 72, 20, 72).withOpacity(0.9),
+                const Color(0xFF4A148C).withOpacity(0.9),
+              ],
+            ),
+          ),
+          child: const Center(
+            child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+            ),
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
@@ -159,15 +277,7 @@ class _ManageProfileScreenState extends State<ManageProfileScreen> {
           ),
         ),
         child: ElevatedButton(
-          onPressed: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Profile updated successfully'),
-                backgroundColor: Color(0xFF8A2BE2),
-              ),
-            );
-            Navigator.pop(context);
-          },
+          onPressed: _isLoading ? null : _saveChanges,
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.white.withOpacity(0.2),
             padding: const EdgeInsets.symmetric(vertical: 16),
@@ -176,14 +286,16 @@ class _ManageProfileScreenState extends State<ManageProfileScreen> {
             ),
             elevation: 0,
           ),
-          child: const Text(
-            'Save Changes',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
+          child: _isLoading
+              ? const CircularProgressIndicator(color: Colors.white)
+              : const Text(
+                  'Save Changes',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
         ),
       ),
     );
@@ -231,5 +343,13 @@ class _ManageProfileScreenState extends State<ManageProfileScreen> {
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _dobController.dispose();
+    _emailController.dispose();
+    super.dispose();
   }
 } 
