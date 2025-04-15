@@ -12,6 +12,7 @@ import 'support_screen.dart';
 
 import 'login_screen.dart';
 import '../services/firebase_service.dart';
+import 'favorites_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -187,6 +188,18 @@ class _HomeScreenState extends State<HomeScreen> {
                         context,
                         MaterialPageRoute(
                           builder: (context) => const ManageBookingsScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  _buildDrawerItem(
+                    icon: Icons.favorite_outline,
+                    title: 'My Favorites',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const FavoritesScreen(),
                         ),
                       );
                     },

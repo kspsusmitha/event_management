@@ -595,4 +595,99 @@ class FirebaseService {
       return 'Guest';
     }
   }
+
+  // Add these methods to FirebaseService class
+
+  Future<Map<String, dynamic>> toggleFavorite(String userId, Map<String, String> serviceData, String type) async {
+    try {
+      final favoriteRef = _database
+          .child('users')
+          .child(userId)
+          .child('favorites')
+          .child(serviceData['name']!);
+
+      final snapshot = await favoriteRef.get();
+      
+      if (snapshot.exists) {
+        // Remove from favorites
+        await favoriteRef.remove();
+        return {
+          'success': true,
+          'isFavorite': false,
+          'message': 'Removed from favorites'
+        };
+      } else {
+        // Add to favorites
+        await favoriteRef.set({
+          ...serviceData,
+          'type': type,
+          'addedAt': ServerValue.timestamp,
+        });
+        return {
+          'success': true,
+          'isFavorite': true,
+          'message': 'Added to favorites'
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Failed to update favorites: ${e.toString()}'
+      };
+    }
+  }
+
+  Future<Map<String, dynamic>> getFavorites(String userId) async {
+    try {
+      final snapshot = await _database
+          .child('users')
+          .child(userId)
+          .child('favorites')
+          .get();
+
+      if (!snapshot.exists) {
+        return {
+          'success': true,
+          'favorites': [],
+          'message': 'No favorites found'
+        };
+      }
+
+      Map<dynamic, dynamic> favoritesData = snapshot.value as Map;
+      List<Map<String, dynamic>> favorites = [];
+      
+      favoritesData.forEach((key, value) {
+        favorites.add(Map<String, dynamic>.from(value));
+      });
+
+      // Sort by most recently added
+      favorites.sort((a, b) => (b['addedAt'] ?? 0).compareTo(a['addedAt'] ?? 0));
+
+      return {
+        'success': true,
+        'favorites': favorites,
+        'message': 'Favorites fetched successfully'
+      };
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Failed to fetch favorites: ${e.toString()}'
+      };
+    }
+  }
+
+  Future<bool> isFavorite(String userId, String serviceName) async {
+    try {
+      final snapshot = await _database
+          .child('users')
+          .child(userId)
+          .child('favorites')
+          .child(serviceName)
+          .get();
+      
+      return snapshot.exists;
+    } catch (e) {
+      return false;
+    }
+  }
 } 

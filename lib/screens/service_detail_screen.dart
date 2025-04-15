@@ -1,8 +1,11 @@
 import 'package:event_management/widgets/contact_form_dialog.dart';
 import 'package:flutter/material.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../services/firebase_service.dart';
 
 
-class ServiceDetailScreen extends StatelessWidget {
+class ServiceDetailScreen extends StatefulWidget {
   final Map<String, String> serviceData;
   final String type; // 'venue', 'photographer', 'caterer', or 'decorator'
 
@@ -11,6 +14,25 @@ class ServiceDetailScreen extends StatelessWidget {
     required this.serviceData,
     required this.type,
   }) : super(key: key);
+
+  @override
+  State<ServiceDetailScreen> createState() => _ServiceDetailScreenState();
+}
+
+class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
+  late Map<String, String> serviceData;
+  late String type;
+  final FirebaseService _firebaseService = FirebaseService();
+  bool _isFavorite = false;
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    serviceData = widget.serviceData;
+    type = widget.type;
+    _loadFavoriteStatus();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -81,9 +103,8 @@ class ServiceDetailScreen extends StatelessWidget {
                           ),
                           child: IconButton(
                             icon: const Icon(Icons.share, color: Color(0xFF8A2BE2)),
-                            onPressed: () {
-                              // Implement share
-                            },
+                            onPressed: _shareService,
+                            tooltip: 'Share',
                           ),
                         ),
                         Container(
@@ -92,10 +113,20 @@ class ServiceDetailScreen extends StatelessWidget {
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: IconButton(
-                            icon: const Icon(Icons.bookmark_border, color: Color(0xFF8A2BE2)),
-                            onPressed: () {
-                              // Implement bookmark
-                            },
+                            icon: _isLoading
+                                ? const SizedBox(
+                                    width: 24,
+                                    height: 24,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF8A2BE2)),
+                                    ),
+                                  )
+                                : Icon(
+                                    _isFavorite ? Icons.favorite : Icons.favorite_border,
+                                    color: const Color(0xFF8A2BE2),
+                                  ),
+                            onPressed: _isLoading ? null : _toggleFavorite,
                           ),
                         ),
                       ],
@@ -422,6 +453,81 @@ class ServiceDetailScreen extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+
+  Future<void> _loadFavoriteStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userId = prefs.getString('userId');
+    if (userId != null) {
+      final isFav = await _firebaseService.isFavorite(userId, serviceData['name']!);
+      setState(() {
+        _isFavorite = isFav;
+      });
+    }
+  }
+
+  Future<void> _toggleFavorite() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userId = prefs.getString('userId');
+    
+    if (userId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please login to add favorites'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final result = await _firebaseService.toggleFavorite(userId, serviceData, type);
+      
+      if (result['success']) {
+        setState(() {
+          _isFavorite = result['isFavorite'];
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(result['message'])),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  void _shareService() {
+    final String serviceType = _getHeaderTitle();
+    final String name = serviceData['name'] ?? 'No Name';
+    final String location = serviceData['location'] ?? 'No Location';
+    
+    final String shareText = '''
+Check out this amazing $serviceType service!
+
+🏢 $name
+📍 Location: $location
+📞 Contact: 098450 08960
+
+Book now for your special event!
+''';
+
+    Share.share(
+      shareText,
+      subject: 'Check out $name',
     );
   }
 } 
