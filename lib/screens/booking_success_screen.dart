@@ -4,10 +4,12 @@ import 'package:event_management/utils/theme.dart';
 
 class BookingSuccessScreen extends StatelessWidget {
   final String orderId;
+  final Map<String, dynamic> bookingData;
 
   const BookingSuccessScreen({
     Key? key,
     required this.orderId,
+    required this.bookingData,
   }) : super(key: key);
 
   @override
@@ -52,11 +54,16 @@ class BookingSuccessScreen extends StatelessWidget {
                         ),
                         child: Column(
                           children: [
-                            const Icon(
-                              Icons.check_circle,
-                              color: Colors.white,
-                              size: 64,
-                            ),
+                            if (bookingData['image1'] != null)
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: Image.asset(
+                                  bookingData['image1'],
+                                  height: 150,
+                                  width: double.infinity,
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
                             const SizedBox(height: 24),
                             const Text(
                               'You will be',

@@ -191,9 +191,6 @@ class _ManageBookingsScreenState extends State<ManageBookingsScreen> with Single
         statusColor = Colors.grey;
     }
 
-    // Default image if none provided
-    final defaultImage = 'assets/images/placeholder.jpg';
-
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       elevation: 2,
@@ -204,21 +201,35 @@ class _ManageBookingsScreenState extends State<ManageBookingsScreen> with Single
         children: [
           ClipRRect(
             borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-            child: Image.asset(
-              booking['image'] ?? defaultImage, // Use null-aware operator
-              height: 150,
-              width: double.infinity,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                // Fallback widget if image fails to load
-                return Container(
-                  height: 150,
-                  width: double.infinity,
-                  color: Colors.grey[200],
-                  child: Icon(Icons.image_not_supported, size: 50, color: Colors.grey[400]),
-                );
-              },
-            ),
+            child: booking['serviceImage'] != null
+                ? Image.network(
+                    booking['serviceImage'],
+                    height: 150,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        height: 150,
+                        width: double.infinity,
+                        color: const Color(0xFF8A2BE2).withOpacity(0.1),
+                        child: Icon(
+                          Icons.image_not_supported,
+                          size: 50,
+                          color: const Color(0xFF8A2BE2).withOpacity(0.3),
+                        ),
+                      );
+                    },
+                  )
+                : Container(
+                    height: 150,
+                    width: double.infinity,
+                    color: const Color(0xFF8A2BE2).withOpacity(0.1),
+                    child: Icon(
+                      Icons.image_not_supported,
+                      size: 50,
+                      color: const Color(0xFF8A2BE2).withOpacity(0.3),
+                    ),
+                  ),
           ),
           Padding(
             padding: const EdgeInsets.all(16),

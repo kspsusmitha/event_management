@@ -1,9 +1,10 @@
 import 'package:event_management/screens/booking_success_screen.dart';
+import 'package:event_management/services/firebase_service.dart';
 import 'package:flutter/material.dart';
 import 'package:event_management/utils/order_id_generator.dart';
-import 'package:firebase_database/firebase_database.dart';
+
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:event_management/models/booking_model.dart';
+
 
 class ContactFormDialog extends StatefulWidget {
   final String serviceName;
@@ -412,7 +413,7 @@ class _ContactFormDialogState extends State<ContactFormDialog> {
 
         // Get current user ID from SharedPreferences
         final prefs = await SharedPreferences.getInstance();
-        final userId = prefs.getString('userId'); // This should be saved during login
+        final userId = prefs.getString('userId');
 
         if (userId == null) {
           Navigator.pop(context); // Remove loading indicator
@@ -427,42 +428,62 @@ class _ContactFormDialogState extends State<ContactFormDialog> {
 
         final orderId = OrderIdGenerator.generate();
 
-        // Create booking object
-        final booking = BookingModel(
-          userId: userId, // Using logged-in user's ID
-          orderId: orderId,
-          serviceName: widget.serviceName,
-          name: _nameController.text,
-          phone: _phoneController.text,
-          email: _emailController.text,
-          guests: int.parse(_guestsController.text),
-          functionType: _selectedFunction,
-          eventDate: '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}',
-          status: 'Pending',
-          createdAt: DateTime.now().toIso8601String(),
-        );
+        // Create booking data
+        final bookingData = {
+          'orderId': orderId,
+          'serviceName': widget.serviceName,
+          'name': _nameController.text,
+          'phone': _phoneController.text,
+          'email': _emailController.text,
+          'guests': int.parse(_guestsController.text),
+          'functionType': _selectedFunction,
+          'eventDate': '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}',
+          'status': 'Pending',
+          'createdAt': DateTime.now().toIso8601String(),
+        };
 
-        // Save to Firebase Realtime Database under the logged-in user's node
-        final databaseRef = FirebaseDatabase.instance.ref();
-        await databaseRef
-            .child('users')  // Changed from 'bookings' to 'users'
-            .child(userId)   // User ID node
-            .child('bookings') // New bookings node under user
-            .child(orderId)  // Unique booking ID
-            .set(booking.toJson());
+        // Get service data from the widget
+        final serviceData = {
+          'id': orderId,
+          'name': widget.serviceName,
+          // Add these lines to include images
+          'image1': 'assets/images/venue6.jpg',
+          'image2': 'assets/images/venue7.jpg',
+          'image3': 'assets/images/venue8.jpg',
+        };
+
+        // Save booking using FirebaseService
+        final result = await FirebaseService().saveBooking(
+          userId,
+          serviceData,
+          bookingData,
+        );
 
         // Remove loading indicator
         Navigator.pop(context);
 
-        // Navigate to success screen
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => BookingSuccessScreen(
-              orderId: orderId,
+        if (result['success']) {
+          // Navigate to success screen with booking data
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => BookingSuccessScreen(
+                orderId: orderId,
+                bookingData: {
+                  ...bookingData,
+                  ...serviceData,
+                },
+              ),
             ),
-          ),
-        );
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(result['message']),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
       } catch (e) {
         // Remove loading indicator
         Navigator.pop(context);

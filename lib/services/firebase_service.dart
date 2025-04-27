@@ -690,4 +690,42 @@ class FirebaseService {
       return false;
     }
   }
+
+  Future<Map<String, dynamic>> saveBooking(String userId, Map<String, dynamic> serviceData, Map<String, dynamic> bookingData) async {
+    try {
+      String bookingId = DateTime.now().millisecondsSinceEpoch.toString();
+      
+      // Combine service and booking data
+      final completeBookingData = {
+        ...bookingData,
+        'serviceId': serviceData['id'],
+        'serviceName': serviceData['name'],
+        'image1': serviceData['image1'], // Store image1
+        'image2': serviceData['image2'], // Store image2
+        'image3': serviceData['image3'], // Store image3
+        'location': serviceData['location'],
+        'status': 'Pending',
+        'createdAt': ServerValue.timestamp,
+      };
+
+      // Save booking under user's bookings
+      await _database
+          .child('users')
+          .child(userId)
+          .child('bookings')
+          .child(bookingId)
+          .set(completeBookingData);
+
+      return {
+        'success': true,
+        'bookingId': bookingId,
+        'message': 'Booking saved successfully'
+      };
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Failed to save booking: ${e.toString()}'
+      };
+    }
+  }
 } 

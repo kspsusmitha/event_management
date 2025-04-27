@@ -141,12 +141,25 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
         onTap: () {
+          // Convert favorite data to match ServiceDetailScreen's expected format
+          final Map<String, String> serviceData = {
+            'id': favorite['id']?.toString() ?? '',
+            'name': favorite['name']?.toString() ?? '',
+            'location': favorite['location']?.toString() ?? '',
+            'price': favorite['price']?.toString() ?? '',
+            'image1': favorite['image1']?.toString() ?? '',
+            'image2': favorite['image2']?.toString() ?? '',
+            'image3': favorite['image3']?.toString() ?? '',
+            'capacity': favorite['capacity']?.toString() ?? '',
+            'type': favorite['type']?.toString() ?? 'venue',
+          };
+
           Navigator.push(
             context,
             MaterialPageRoute(
               builder: (context) => ServiceDetailScreen(
-                serviceData: Map<String, String>.from(favorite),
-                type: favorite['type'],
+                serviceData: serviceData,
+                type: favorite['type'] ?? 'venue',
               ),
             ),
           );
@@ -161,6 +174,18 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                 height: 150,
                 width: double.infinity,
                 fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    height: 150,
+                    width: double.infinity,
+                    color: Colors.grey[200],
+                    child: const Icon(
+                      Icons.image_not_supported,
+                      size: 50,
+                      color: Colors.grey,
+                    ),
+                  );
+                },
               ),
             ),
             Padding(
@@ -176,13 +201,47 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Text(
-                    favorite['location'] ?? 'No Location',
-                    style: TextStyle(
-                      color: Colors.grey[600],
-                      fontSize: 14,
-                    ),
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.location_on,
+                        size: 16,
+                        color: Colors.grey,
+                      ),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          favorite['location'] ?? 'No Location',
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 14,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
                   ),
+                  if (favorite['price'] != null) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      '₹${favorite['price']}',
+                      style: TextStyle(
+                        color: Colors.grey[800],
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                  if (favorite['capacity'] != null) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      'Capacity: ${favorite['capacity']}',
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
